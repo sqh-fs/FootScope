@@ -305,6 +305,8 @@ tbody .points-cell { color: var(--accent); font-weight: 740; }
 
 .team-label { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .team-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.team-link:hover .team-name, .team-link.leader-value:hover { color: var(--accent); }
+.team-link:focus-visible { border-radius: 5px; outline-offset: 2px; }
 
 .team-crest {
   width: 29px;
@@ -451,7 +453,7 @@ tbody .points-cell { color: var(--accent); font-weight: 740; }
   .sidebar { position: static; height: auto; padding: 13px 15px 9px; border: 0; border-bottom: 1px solid var(--border); }
   .brand { margin: 0 0 12px; font-size: 20px; }
   .brand-icon { width: 33px; height: 33px; }
-  .nav-links { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .nav-links { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
   .nav-link { gap: 6px; min-height: 36px; justify-content: center; padding: 0 5px; font-size: 12px; white-space: nowrap; }
   .nav-link svg { width: 14px; height: 14px; }
   .topbar { min-height: 50px; padding-inline: 15px; font-size: 12px; }
@@ -479,6 +481,7 @@ tbody .points-cell { color: var(--accent); font-weight: 740; }
 }
 
 @media (max-width: 410px) {
+  .nav-link svg { display: none; }
   .record-cell { display: none; }
   .fixture-row { padding-inline: 8px; }
 }

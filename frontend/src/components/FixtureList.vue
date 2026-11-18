@@ -94,12 +94,12 @@ function result(match: Match) {
         <h3>{{ date }}</h3>
         <ul class="fixture-list">
           <li v-for="match in matchesOnDate" :key="match.id" class="fixture-row">
-            <span class="fixture-home"><TeamLabel :team="match.home_team" /></span>
+            <span class="fixture-home"><TeamLabel :team="match.home_team" linked /></span>
             <span class="fixture-center">
               <span class="fixture-result" :class="{ 'finished-result': isComplete(match) }">{{ result(match) }}</span>
               <span class="fixture-status" :class="{ 'in-play': match.status === 'IN_PLAY' }">{{ statusNames[match.status] ?? '状态待定' }}</span>
             </span>
-            <span class="fixture-away"><TeamLabel :team="match.away_team" /></span>
+            <span class="fixture-away"><TeamLabel :team="match.away_team" linked /></span>
           </li>
         </ul>
       </div>

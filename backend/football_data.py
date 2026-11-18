@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import time
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -6,7 +7,7 @@ from pathlib import Path
 import httpx
 from dotenv import dotenv_values
 
-from .storage import ROOT, save_snapshot
+from .storage import ROOT, rosters_are_fresh, save_rosters, save_snapshot
 
 API_BASE = "https://api.football-data.org/v4/competitions/PL/"
 TOKEN_NAME = "FOOTBALL_DATA_API_KEY"
@@ -107,6 +108,29 @@ def normalize(
     return season, list(teams.values()), standings, matches
 
 
+def normalize_rosters(payload: dict, season_id: int, team_ids: set[int]) -> dict:
+    if payload["season"]["id"] != season_id:
+        raise SyncError("球队名单与积分榜来自不同赛季。")
+    rosters = {}
+    for team in payload["teams"]:
+        players = [{
+            "id": player["id"],
+            "name": player["name"],
+            "position": player.get("position"),
+            "nationality": player.get("nationality"),
+        } for player in team.get("squad") or []]
+        if not players or len({player["id"] for player in players}) != len(players):
+            raise SyncError("上游球队名单不完整。")
+        rosters[team["id"]] = {
+            "players": players,
+            "coach": (team.get("coach") or {}).get("name"),
+            "venue": team.get("venue"),
+        }
+    if rosters.keys() != team_ids:
+        raise SyncError("上游球队名单与当前联赛球队不一致。")
+    return rosters
+
+
 def sync(path: Path) -> str:
     token = os.environ.get(TOKEN_NAME) or dotenv_values(ROOT / ".env").get(TOKEN_NAME)
     if not token or not token.strip():
@@ -121,11 +145,25 @@ def sync(path: Path) -> str:
         standings_data = get_resource(client, "standings")
         matches_data = get_resource(client, "matches")
 
-    try:
-        season, teams, standings, matches = normalize(standings_data, matches_data, started_at)
-    except (KeyError, ValueError, TypeError, StopIteration, AttributeError):
-        raise SyncError("上游数据格式有变化，保留上次同步的数据。") from None
+        try:
+            season, teams, standings, matches = normalize(standings_data, matches_data, started_at)
+        except (KeyError, ValueError, TypeError, StopIteration, AttributeError):
+            raise SyncError("上游数据格式有变化，保留上次同步的数据。") from None
 
-    if save_snapshot(path, season, teams, standings, matches):
-        return f"同步成功：{len(standings)} 支球队，{len(matches)} 场比赛。"
-    return "已有更新的数据，本次同步未覆盖缓存。"
+        if not save_snapshot(path, season, teams, standings, matches):
+            return "已有更新的数据，本次同步未覆盖缓存。"
+
+        message = f"同步成功：{len(standings)} 支球队，{len(matches)} 场比赛。"
+        season_id = season["id"]
+        try:
+            if rosters_are_fresh(path, season_id):
+                return message
+            team_ids = {row["team_id"] for row in standings}
+            rosters = normalize_rosters(get_resource(client, "teams"), season_id, team_ids)
+            save_rosters(path, season_id, started_at, rosters)
+        except SyncError as error:
+            return f"{message}球队名单同步失败：{error}"
+        except (KeyError, ValueError, TypeError, AttributeError, sqlite3.Error):
+            return f"{message}球队名单更新失败，保留已缓存的名单。"
+
+    return f"{message}球员名单已更新，共 {sum(len(team['players']) for team in rosters.values())} 条球员记录。"

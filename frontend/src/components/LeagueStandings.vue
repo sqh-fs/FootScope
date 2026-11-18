@@ -34,7 +34,7 @@ defineProps<{ standings: Standing[] }>()
         <tbody>
           <tr v-for="row in standings" :key="row.team.id">
             <td class="rank-cell"><span :class="{ 'leader-rank': row.position === 1 }">{{ row.position }}</span></td>
-            <th scope="row" class="name-cell"><TeamLabel :team="row.team" /></th>
+            <th scope="row" class="name-cell"><TeamLabel :team="row.team" linked /></th>
             <td>{{ row.played }}</td>
             <td class="record-cell">{{ row.won }}</td>
             <td class="record-cell">{{ row.drawn }}</td>

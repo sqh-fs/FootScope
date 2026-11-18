@@ -1,3 +1,4 @@
+import json
 import sqlite3
 from contextlib import closing
 from datetime import UTC, datetime, timedelta
@@ -51,6 +52,13 @@ CREATE TABLE IF NOT EXISTS matches (
 );
 
 CREATE INDEX IF NOT EXISTS matches_season_kickoff ON matches (season_id, kickoff_utc);
+
+CREATE TABLE IF NOT EXISTS roster_snapshots (
+    season_id INTEGER PRIMARY KEY REFERENCES seasons (id),
+    sync_started_at TEXT NOT NULL,
+    synced_at TEXT NOT NULL,
+    squads_json TEXT NOT NULL
+);
 """
 
 
@@ -183,4 +191,56 @@ def read_snapshot(path: Path) -> dict | None:
             "last_synced_at": season["synced_at"],
             "is_stale": datetime.now(UTC) - synced_at >= timedelta(hours=24),
         },
+    }
+
+
+def rosters_are_fresh(path: Path, season_id: int) -> bool:
+    with closing(connect(path)) as connection:
+        row = connection.execute(
+            "SELECT synced_at FROM roster_snapshots WHERE season_id = ?", (season_id,)
+        ).fetchone()
+    return bool(row and datetime.now(UTC) - datetime.fromisoformat(row["synced_at"]) < timedelta(days=1))
+
+
+def save_rosters(path: Path, season_id: int, started_at: datetime, rosters: dict) -> None:
+    with closing(connect(path)) as connection, connection:
+        connection.execute(
+            """
+            INSERT INTO roster_snapshots VALUES (?, ?, ?, ?)
+            ON CONFLICT (season_id) DO UPDATE SET
+                sync_started_at = excluded.sync_started_at,
+                synced_at = excluded.synced_at,
+                squads_json = excluded.squads_json
+            WHERE excluded.sync_started_at > roster_snapshots.sync_started_at
+            """,
+            (season_id, started_at.isoformat(), datetime.now(UTC).isoformat(), json.dumps(rosters, ensure_ascii=False)),
+        )
+
+
+def read_team(path: Path, team_id: int) -> dict | None:
+    if not 0 < team_id < 2**63:
+        return None
+    with closing(connect(path)) as connection:
+        row = connection.execute(
+            """
+            SELECT teams.*, seasons.start_date, seasons.end_date, roster_snapshots.synced_at,
+                   roster_snapshots.squads_json
+            FROM standings
+            JOIN teams ON teams.id = standings.team_id
+            JOIN seasons ON seasons.id = standings.season_id
+            LEFT JOIN roster_snapshots ON roster_snapshots.season_id = seasons.id
+            WHERE teams.id = ? AND seasons.id = (
+                SELECT id FROM seasons ORDER BY sync_started_at DESC LIMIT 1
+            )
+            """,
+            (team_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    roster = json.loads(row["squads_json"]).get(str(team_id)) if row["squads_json"] else None
+    return {
+        "team": {key: row[key] for key in ("id", "name", "short_name", "code")},
+        "season": {"start_date": row["start_date"], "end_date": row["end_date"]},
+        "roster": roster,
+        "meta": {"source": "football-data.org", "last_synced_at": row["synced_at"] if roster else None},
     }
