@@ -36,6 +36,7 @@ def main() -> int:
     parser.add_argument("--database", type=Path, default=DATABASE)
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--log-file", type=Path, help="Append the sync result to this file.")
+    parser.add_argument("--file", type=Path, help="Import a local Premier League stats CSV.")
     args = parser.parse_args()
 
     if args.command == "sync":
@@ -44,14 +45,13 @@ def main() -> int:
     if args.command == "import-lab":
         from httpx import HTTPError
 
-        from .statsbomb import import_match
+        from .lab import import_match_stats
 
         try:
-            match = import_match(args.database)
-        except (HTTPError, KeyError, TypeError, ValueError, OSError, StopIteration) as error:
-            print(f"StatsBomb 样本导入失败：{error}", file=sys.stderr)
+            print(import_match_stats(args.database, args.file))
+        except (HTTPError, ValueError, OSError, sqlite3.Error) as error:
+            print(f"英超比赛统计导入失败：{error}", file=sys.stderr)
             return 1
-        print(f"已导入世界杯决赛：{len(match['teams'])} 支球队，{len(match['shots'])} 次射门。")
         return 0
 
     import uvicorn

@@ -130,7 +130,7 @@ onUnmounted(() => {
     <main class="workspace">
       <header class="topbar">
         <span v-if="showDashboard" class="breadcrumb"><span>比赛中心</span><span aria-hidden="true">/</span><strong>英超</strong></span>
-        <span v-else class="breadcrumb"><span>战术实验室</span><span aria-hidden="true">/</span><strong>{{ teamId !== null ? '球队阵容' : showClubs ? '英超球队' : '历史比赛' }}</strong></span>
+        <span v-else class="breadcrumb"><span>战术实验室</span><span aria-hidden="true">/</span><strong>{{ teamId !== null ? '球队阵容' : showClubs ? '英超球队' : '本赛季英超' }}</strong></span>
         <div v-if="showDashboard" class="sync-tools">
           <span v-if="dashboard" class="sync-time">
             <Clock3 :size="14" />
@@ -143,7 +143,7 @@ onUnmounted(() => {
       </header>
 
       <div class="workspace-content">
-        <TacticalLab v-if="showLab" :clubs="dashboard?.standings ?? []" :show-clubs="showClubs" :clubs-loading="loading" />
+        <TacticalLab v-if="showLab" :dashboard="dashboard" :show-clubs="showClubs" :loading="loading" :error="error" @retry="loadDashboard" />
         <TeamRoster v-else-if="teamId !== null" :key="teamId" :team-id="teamId" />
         <template v-else>
           <section class="hero" aria-labelledby="page-title">

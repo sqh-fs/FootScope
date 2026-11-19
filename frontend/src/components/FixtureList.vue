@@ -2,7 +2,7 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from '@lucide/vue'
 import { computed, ref, watch } from 'vue'
 import TeamLabel from './TeamLabel.vue'
-import { isComplete, type Match } from '../types'
+import { isComplete, matchStatusNames, type Match } from '../types'
 
 const props = defineProps<{ matches: Match[]; currentMatchday: number | null }>()
 const dayFormatter = new Intl.DateTimeFormat('zh-CN', {
@@ -11,18 +11,6 @@ const dayFormatter = new Intl.DateTimeFormat('zh-CN', {
 const timeFormatter = new Intl.DateTimeFormat('zh-CN', {
   hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
 })
-const statusNames: Record<string, string> = {
-  SCHEDULED: '待开赛',
-  TIMED: '待开赛',
-  IN_PLAY: '进行中',
-  PAUSED: '中场休息',
-  FINISHED: '已结束',
-  AWARDED: '已判定',
-  POSTPONED: '延期',
-  SUSPENDED: '暂停',
-  CANCELLED: '取消',
-}
-
 const rounds = computed(() => {
   const values = new Set(props.matches.map((match) => match.matchday))
   return [...values].sort((left, right) => (left ?? Infinity) - (right ?? Infinity))
@@ -97,7 +85,7 @@ function result(match: Match) {
             <span class="fixture-home"><TeamLabel :team="match.home_team" linked /></span>
             <span class="fixture-center">
               <span class="fixture-result" :class="{ 'finished-result': isComplete(match) }">{{ result(match) }}</span>
-              <span class="fixture-status" :class="{ 'in-play': match.status === 'IN_PLAY' }">{{ statusNames[match.status] ?? '状态待定' }}</span>
+              <span class="fixture-status" :class="{ 'in-play': match.status === 'IN_PLAY' }">{{ matchStatusNames[match.status] ?? '状态待定' }}</span>
             </span>
             <span class="fixture-away"><TeamLabel :team="match.away_team" linked /></span>
           </li>

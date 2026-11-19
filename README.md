@@ -53,7 +53,9 @@ Football data provided by the Football-Data.org API.
 
 在积分榜、赛程或「战术实验室 → 英超球队」点击球队，即可查看本赛季球员名单，按位置筛选或搜索球员。名单来自 football-data.org，随同步任务每日更新，有新赛季时会重新同步。球员姓名使用数据源的原文。
 
-「战术实验室 → 历史比赛」展示 2022 世界杯决赛的射门图、开场阵型和比赛球员名单。点击球队筛选，点击射门点查看球员、时间、结果和 xG。射门和 xG 统计涵盖常规时间与加时，点球大战比分单列。首次使用时运行以下命令从 [StatsBomb Open Data](https://github.com/hudl/open-data) 导入样本。
+「战术实验室 → 本赛季英超」按轮次和比赛查看当前赛季的全部赛程。已导入统计的比赛可以比较双方的 xG、射门、射正率、半场进球、角球、犯规和红黄牌。射正率为射正次数除以射门次数，射门次数为零时显示「—」。
+
+先同步英超赛程，再运行以下命令从 [Football-Data.co.uk](https://football-data.co.uk/englandm.php) 下载和导入本赛季已结束比赛的统计。也可用 `--file <CSV 路径>` 导入本地下载的英超 CSV。导入按比赛日期、主客队和全场比分核对赛程，处理结果会显示已结束比赛的统计覆盖数。赛程随 `sync` 更新，比赛统计使用 `import-lab` 更新。CSV 提供整场统计，逐次射门和传球坐标需由事件数据源补充。
 
 ```powershell
 .\.venv\Scripts\python.exe -m backend import-lab

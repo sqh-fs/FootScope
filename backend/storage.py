@@ -53,6 +53,17 @@ CREATE TABLE IF NOT EXISTS matches (
 
 CREATE INDEX IF NOT EXISTS matches_season_kickoff ON matches (season_id, kickoff_utc);
 
+CREATE TABLE IF NOT EXISTS lab_match_stats (
+    match_id INTEGER PRIMARY KEY REFERENCES matches (id) ON DELETE CASCADE,
+    kickoff_utc TEXT NOT NULL,
+    home_team_id INTEGER NOT NULL,
+    away_team_id INTEGER NOT NULL,
+    home_score INTEGER NOT NULL,
+    away_score INTEGER NOT NULL,
+    import_started_at TEXT NOT NULL,
+    stats_json TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS roster_snapshots (
     season_id INTEGER PRIMARY KEY REFERENCES seasons (id),
     sync_started_at TEXT NOT NULL,

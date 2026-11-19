@@ -50,44 +50,22 @@ export interface TeamProfile {
   meta: { source: string; last_synced_at: string | null }
 }
 
-export interface LabPlayer {
-  id: number
-  name: string
-  number: number
-  position: string | null
-  started: boolean
-  appeared: boolean
-}
-
-export interface LabTeam {
-  id: number
-  name: string
-  score: number
-  formation: string
-  players: LabPlayer[]
-}
-
-export interface Shot {
-  id: string
-  team_id: number
-  player: string
-  x: number
-  y: number
-  xg: number | null
-  minute: number
-  second: number
-  period: number
-  outcome: string
-}
-
-export interface LabMatch {
-  id: number
-  date: string
-  venue: string | null
-  teams: [LabTeam, LabTeam]
-  shootout: [number, number]
-  shots: Shot[]
+export interface LabMatchStats {
+  status: string
+  stats: Record<string, [number | null, number | null]> | null
   source_url: string
+}
+
+export const matchStatusNames: Record<string, string> = {
+  SCHEDULED: '待开赛',
+  TIMED: '待开赛',
+  IN_PLAY: '进行中',
+  PAUSED: '中场休息',
+  FINISHED: '已结束',
+  AWARDED: '已判定',
+  POSTPONED: '延期',
+  SUSPENDED: '暂停',
+  CANCELLED: '取消',
 }
 
 export function isComplete(match: Match) {
