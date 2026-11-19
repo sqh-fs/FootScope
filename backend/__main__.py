@@ -35,6 +35,7 @@ def main() -> int:
     parser.add_argument("command", choices=("sync", "import-lab", "serve"))
     parser.add_argument("--database", type=Path, default=DATABASE)
     parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--snapshot-cache-ttl", type=int, default=30, help="League response cache lifetime in seconds (0 disables it).")
     parser.add_argument("--log-file", type=Path, help="Append the sync result to this file.")
     parser.add_argument("--file", type=Path, help="Import a local Premier League stats CSV.")
     args = parser.parse_args()
@@ -58,7 +59,9 @@ def main() -> int:
 
     from .main import create_app
 
-    uvicorn.run(create_app(args.database), host="127.0.0.1", port=args.port)
+    if not 0 <= args.snapshot_cache_ttl <= 30:
+        parser.error("--snapshot-cache-ttl must be between 0 and 30")
+    uvicorn.run(create_app(args.database, snapshot_cache_ttl=args.snapshot_cache_ttl), host="127.0.0.1", port=args.port)
     return 0
 
 

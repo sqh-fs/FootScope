@@ -89,7 +89,7 @@ onMounted(() => {
   readAnchor()
   window.addEventListener('hashchange', readAnchor)
   document.addEventListener('visibilitychange', refreshVisibleDashboard)
-  cacheRefreshTimer = window.setInterval(refreshVisibleDashboard, 60_000)
+  cacheRefreshTimer = window.setInterval(refreshVisibleDashboard, 55_000 + Math.random() * 10_000)
   void loadDashboard().then(() => {
     if (section.value !== 'overview') document.getElementById(section.value)?.scrollIntoView()
   })

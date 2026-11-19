@@ -1,0 +1,16 @@
+[Unit]
+Description=Synchronize FootScope Premier League standings and fixtures
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=footscope
+WorkingDirectory=/opt/footscope
+StateDirectory=footscope
+EnvironmentFile=/etc/footscope/sync.env
+ExecStart=/opt/footscope/.venv/bin/python -B -m backend sync --database /var/lib/footscope/footscope.sqlite3
+TimeoutStartSec=5min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict

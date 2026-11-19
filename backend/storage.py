@@ -73,8 +73,8 @@ CREATE TABLE IF NOT EXISTS roster_snapshots (
 """
 
 
-def connect(path: Path) -> sqlite3.Connection:
-    connection = sqlite3.connect(path, timeout=5)
+def connect(path: Path, *, timeout: float = 5) -> sqlite3.Connection:
+    connection = sqlite3.connect(path, timeout=timeout)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
     return connection

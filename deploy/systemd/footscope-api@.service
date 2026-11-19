@@ -1,0 +1,17 @@
+[Unit]
+Description=FootScope API on port %i
+After=network.target
+
+[Service]
+User=footscope
+WorkingDirectory=/opt/footscope
+StateDirectory=footscope
+ExecStart=/opt/footscope/.venv/bin/python -B -m backend serve --database /var/lib/footscope/footscope.sqlite3 --port %i
+Restart=on-failure
+RestartSec=2s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target
